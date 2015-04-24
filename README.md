@@ -59,7 +59,7 @@ Unnecessary output (*_foo) is silenced with Silence layers. MemoryData layer has
 
 In python, the usage is like this:
 
-``python
+```python
 solver=caffe.SGDSolver(....)
 solver.net.set_input_arrays(data, label_foo, 0)
 solver.net.set_input_arrays(label, label_foo, 1)
