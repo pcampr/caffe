@@ -111,8 +111,10 @@ void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   top[0]->set_cpu_data(data_ + pos_ * size_);
   top[1]->set_cpu_data(labels_ + pos_);
   pos_ = (pos_ + batch_size_) % n_;
-  if (pos_ == 0)
+  if (pos_ == 0) {
     has_new_data_ = false;
+    LOG(INFO) << "Memory data layer depleted data (batch_size=" << batch_size_ << ", n=" << n_ << ", pos=" << pos_ << ")";
+  }
 }
 
 INSTANTIATE_CLASS(MemoryDataLayer);

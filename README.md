@@ -1,34 +1,69 @@
 # Caffe
 
-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
+This fork allows to use more MemoryData layers.
 
-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
+## Example
 
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
-- [BVLC reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
-- [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
+Example of net configuration, that uses two memory data layers. Memory data layer is strict about the dimensionality of label output. In this example, label can have arbitrary dimensions.
 
-and step-by-step examples.
+```
+layer {
+  name: "data"
+  type: "MemoryData"
+  top: "data"
+  top: "data_foo"
+  include {
+    phase: TRAIN
+  }
+  memory_data_param {
+    batch_size: 8
+    channels: 3
+    height: 227
+    width: 227
+  }
+}
+layer {
+  name: "label"
+  type: "MemoryData"
+  top: "label"
+  top: "label_foo"
+  include {
+    phase: TRAIN
+  }
+  memory_data_param {
+    batch_size: 8
+    channels: 1844
+    height: 1
+    width: 1
+  }
+}
+layer {
+  name: "silence1"
+  type: "Silence"
+  bottom: "label_foo"
+  include {
+    phase: TRAIN
+  }
+}
+layer {
+  name: "silence2"
+  type: "Silence"
+  bottom: "data_foo"
+  include {
+    phase: TRAIN
+  }
+}
+```
 
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Unnecessary output (*_foo) is silenced with Silence layers. MemoryData layer has always two outputs, so we cannot omit ony of them.
 
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+In python, the usage is like this:
 
-Happy brewing!
+``python
+solver=caffe.SGDSolver(....)
+solver.net.set_input_arrays(data, label_foo, 0)
+solver.net.set_input_arrays(label, label_foo, 1)
+solver.step(....)
+```
 
-## License and Citation
-
-Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
-The BVLC reference models are released for unrestricted use.
-
-Please cite Caffe in your publications if it helps your research:
-
-    @article{jia2014caffe,
-      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
-      Journal = {arXiv preprint arXiv:1408.5093},
-      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
-      Year = {2014}
-    }
+set_input_arrays method has additional parameter, index of memory data layer, into which the arrays will be connected
